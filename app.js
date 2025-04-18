@@ -4,15 +4,18 @@
 
   class Gridlock {
     constructor() {
-      // occupancy grids
+      // 1. Track filled cells for each player
       this.occ = [
         Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false)),
         Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false))
       ];
+      // 2. Count consecutive skipped turns
       this.skipCount = 0;
-      this.currentPlayer = 0;       // 0 = P1, 1 = P2
-      this.rectSize = [null, null]; // [ [w,h], [w,h] ]
+      // 3. Track each player’s total covered squares
       this.scores = [0, 0];
+
+      this.currentPlayer = 0;
+      this.rectSize = [null, null];
 
       this.boards = [
         this.initBoard('board-1', 0),
@@ -34,13 +37,11 @@
 
     initBoard(id, player) {
       const container = document.getElementById(id);
-      // create the 10×10 cells (for visual gridlines)
       for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cell');
         container.appendChild(cell);
       }
-      // click handler
       container.addEventListener('click', e => this.onBoardClick(e, player));
       return container;
     }
@@ -51,55 +52,43 @@
     }
 
     rollDice() {
-   // 1️⃣ Roll two dice
-const d1 = 1 + Math.floor(Math.random() * 6);
-const d2 = 1 + Math.floor(Math.random() * 6);
-this.rectSize[this.currentPlayer] = [d1, d2];
-this.resultSpan.textContent = `Player ${this.currentPlayer+1} rolled ${d1} × ${d2}`;
+      const d1 = 1 + Math.floor(Math.random() * 6);
+      const d2 = 1 + Math.floor(Math.random() * 6);
+      this.rectSize[this.currentPlayer] = [d1, d2];
+      this.resultSpan.textContent = `Player ${this.currentPlayer+1} rolled ${d1}×${d2}`;
+    }
 
-// 2️⃣ Disable further rolls until placement or skip
-this.rollBtn.disabled = true;
-
-// 3️⃣ If no valid placement anywhere, skip turn automatically
-if (!this.hasValidMove(this.currentPlayer, [d1, d2])) {
-  alert(`No valid placement for ${d1}×${d2}, skipping turn.`);
-  return this.skipTurn();
-}   
+    /** Return true if player has any room for a w×h rectangle */
     hasValidMove(player, [w, h]) {
       const grid = this.occ[player];
       for (let r = 0; r <= GRID_SIZE - h; r++) {
         for (let c = 0; c <= GRID_SIZE - w; c++) {
-          let ok = true;
-          for (let dr = 0; dr < h && ok; dr++) {
+          let free = true;
+          for (let dr = 0; dr < h && free; dr++) {
             for (let dc = 0; dc < w; dc++) {
-              if (grid[r+dr][c+dc]) { ok = false; break; }
+              if (grid[r + dr][c + dc]) free = false;
             }
           }
-          if (ok) return true;
+          if (free) return true;
         }
       }
       return false;
     }
 
     onBoardClick(e, clickedBoard) {
-      // determine whose board this really is (blocker?)
       const targetBoard = this.blockBox.checked
         ? 1 - this.currentPlayer
         : this.currentPlayer;
       if (clickedBoard !== targetBoard) return;
 
       const size = this.rectSize[this.currentPlayer];
-      if (!size) {
-        return alert('⚠️ You must roll before placing.');
-      }
+      if (!size) return alert('⚠️ You must roll before placing.');
 
-      // check if any move at all
+      // Auto‑skip if no valid placement anywhere
       if (!this.hasValidMove(this.currentPlayer, size)) {
-        this.skipTurn();
-        return;
+        return this.skipTurn();
       }
 
-      // compute row/col from click
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -107,33 +96,31 @@ if (!this.hasValidMove(this.currentPlayer, [d1, d2])) {
       const row = Math.floor(y / CELL_PX);
       const [w, h] = size;
 
-      // check fit & occupancy
-      if (row + h > GRID_SIZE || col + w > GRID_SIZE) {
-        return alert('❌ Doesn’t fit there.');
-      }
+      // Collision detection at that spot
       for (let dr = 0; dr < h; dr++) {
         for (let dc = 0; dc < w; dc++) {
-          if (this.occ[this.currentPlayer][row+dr][col+dc]) {
-            return alert('❌ Space already taken.');
+          if (this.occ[this.currentPlayer][row + dr][col + dc]) {
+            return alert('❌ Cannot place here: space already taken.');
           }
         }
       }
 
-      // **Place the rectangle**
+      // Place the rectangle
       const color = this.currentPlayer === 0
-        ? 'rgba(0,128,0,0.5)'
-        : 'rgba(0,0,255,0.5)';
+        ? 'rgba(0,128,0,0.5)'      // green
+        : 'rgba(128,0,128,0.5)';   // purple
+
       const boardEl = this.boards[clickedBoard];
       const rectEl = document.createElement('div');
       rectEl.style.position = 'absolute';
-      rectEl.style.left   = `${col * CELL_PX}px`;
-      rectEl.style.top    = `${row * CELL_PX}px`;
-      rectEl.style.width  = `${w * CELL_PX}px`;
-      rectEl.style.height = `${h * CELL_PX}px`;
+      rectEl.style.left     = `${col * CELL_PX}px`;
+      rectEl.style.top      = `${row * CELL_PX}px`;
+      rectEl.style.width    = `${w * CELL_PX}px`;
+      rectEl.style.height   = `${h * CELL_PX}px`;
       rectEl.style.background = color;
-      rectEl.style.border = '1px solid #333';
+      rectEl.style.border   = '1px solid #333';
 
-      // label
+      // Label and editable on double‑click
       const label = document.createElement('span');
       label.textContent = `${w}×${h}`;
       label.style.position = 'absolute';
@@ -142,54 +129,56 @@ if (!this.hasValidMove(this.currentPlayer, [d1, d2])) {
       label.style.fontSize = '12px';
       label.style.color = '#000';
       label.style.cursor = 'pointer';
-      // allow editing on double‑click
       label.addEventListener('dblclick', () => {
         const txt = prompt('Edit dimensions label:', label.textContent);
         if (txt !== null) label.textContent = txt;
       });
-
       rectEl.appendChild(label);
       boardEl.appendChild(rectEl);
 
-      // mark occupancy
+      // Mark occupancy
       for (let dr = 0; dr < h; dr++) {
         for (let dc = 0; dc < w; dc++) {
-          this.occ[this.currentPlayer][row+dr][col+dc] = true;
+          this.occ[this.currentPlayer][row + dr][col + dc] = true;
         }
       }
 
-      // update score
+      // Update score
       this.scores[this.currentPlayer] += w * h;
-      this.scoreEls[this.currentPlayer].textContent =
-        `Score: ${this.scores[this.currentPlayer]}`;
+      this.scoreEls[this.currentPlayer].textContent = `Score: ${this.scores[this.currentPlayer]}`;
 
-      // prepare next turn
+      // Prepare next turn
       this.rectSize[this.currentPlayer] = null;
-      this.resultSpan.textContent = '';
       this.skipCount = 0;
       this.nextTurn();
     }
 
     skipTurn() {
-      alert(`Player ${this.currentPlayer+1} has no valid move and skips.`);
+      alert(`Player ${this.currentPlayer+1} skips—no valid moves.`);
       this.skipCount++;
       this.rectSize[this.currentPlayer] = null;
-      this.resultSpan.textContent = '';
+
+      // Both skipped in a row → game over
       if (this.skipCount >= 2) {
         return this.endGame();
       }
       this.nextTurn();
     }
 
+    endGame() {
+      this.rollBtn.disabled = true;
+      alert(
+        `🏁 Game over!\n` +
+        `Player 1: ${this.scores[0]} squares\n` +
+        `Player 2: ${this.scores[1]} squares`
+      );
+    }
+
     nextTurn() {
       this.currentPlayer = 1 - this.currentPlayer;
       this.rollBtn.disabled = false;
-    }
-
-    endGame() {
-      this.rollBtn.disabled = true;
-this.blockBox.disabled = true;  // Prevent toggling after game ends
-      alert(`🏁 Game over!\nPlayer 1: ${this.scores[0]} squares\nPlayer 2: ${this.scores[1]} squares`);
+      this.resultSpan.textContent = '';
+      // Note: skipCount reset happens only after a successful placement
     }
   }
 
