@@ -51,12 +51,20 @@
     }
 
     rollDice() {
-      const d1 = 1 + Math.floor(Math.random() * 6);
-      const d2 = 1 + Math.floor(Math.random() * 6);
-      this.rectSize[this.currentPlayer] = [d1, d2];
-      this.resultSpan.textContent = `Player ${this.currentPlayer+1} rolled ${d1} × ${d2}`;
-    }
+   // 1️⃣ Roll two dice
+const d1 = 1 + Math.floor(Math.random() * 6);
+const d2 = 1 + Math.floor(Math.random() * 6);
+this.rectSize[this.currentPlayer] = [d1, d2];
+this.resultSpan.textContent = `Player ${this.currentPlayer+1} rolled ${d1} × ${d2}`;
 
+// 2️⃣ Disable further rolls until placement or skip
+this.rollBtn.disabled = true;
+
+// 3️⃣ If no valid placement anywhere, skip turn automatically
+if (!this.hasValidMove(this.currentPlayer, [d1, d2])) {
+  alert(`No valid placement for ${d1}×${d2}, skipping turn.`);
+  return this.skipTurn();
+}   
     hasValidMove(player, [w, h]) {
       const grid = this.occ[player];
       for (let r = 0; r <= GRID_SIZE - h; r++) {
@@ -180,6 +188,7 @@
 
     endGame() {
       this.rollBtn.disabled = true;
+this.blockBox.disabled = true;  // Prevent toggling after game ends
       alert(`🏁 Game over!\nPlayer 1: ${this.scores[0]} squares\nPlayer 2: ${this.scores[1]} squares`);
     }
   }
