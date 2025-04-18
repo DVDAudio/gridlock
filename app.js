@@ -114,7 +114,7 @@
       // **Place the rectangle**
       const color = this.currentPlayer === 0
         ? 'rgba(0,128,0,0.5)'
-        : 'rgba(0,0,200,0.5)';
+        : 'rgba(0,0,255,0.5)';
       const boardEl = this.boards[clickedBoard];
       const rectEl = document.createElement('div');
       rectEl.style.position = 'absolute';
