@@ -2,17 +2,20 @@ body {
   font-family: sans-serif;
   text-align: center;
 }
+
 #game {
   display: flex;
   justify-content: center;
   gap: 2rem;
   margin-top: 1rem;
 }
+
 .board-container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 .board {
   position: relative;
   width: 400px;   /* 10 cells × 40px */
@@ -21,6 +24,7 @@ body {
   border: 2px solid #333;
   margin-bottom: 0.5rem;
 }
+
 .board .cell {
   box-sizing: border-box;
   width: 40px;
@@ -28,9 +32,11 @@ body {
   float: left;
   border: 1px solid #aaa;
 }
+
 .score {
   font-weight: bold;
 }
+
 #controls {
   margin-top: 1rem;
   display: flex;
@@ -38,6 +44,7 @@ body {
   gap: 1rem;
   align-items: center;
 }
+
 #roll-result {
   font-size: 1.2rem;
   font-weight: bold;
