@@ -99,7 +99,7 @@
       // Collision detection at that spot
       for (let dr = 0; dr < h; dr++) {
         for (let dc = 0; dc < w; dc++) {
-          if (this.occ[this.currentPlayer][row + dr][col + dc]) {
+          if (this.occ[targetBoard][row + dr][col + dc]) {
             return alert('❌ Cannot place here: space already taken.');
           }
         }
@@ -139,7 +139,7 @@
       // Mark occupancy
       for (let dr = 0; dr < h; dr++) {
         for (let dc = 0; dc < w; dc++) {
-          this.occ[this.currentPlayer][row + dr][col + dc] = true;
+          this.occ[targetBoard][row + dr][col + dc] = true;
         }
       }
 
