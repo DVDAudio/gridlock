@@ -127,15 +127,18 @@
       rectEl.appendChild(label);
       boardEl.appendChild(rectEl);
 
+      // only award points if placed on own grid
+      if (targetBoard === this.currentPlayer) {
+        this.scores[this.currentPlayer] += w * h;
+        this.scoreEls[this.currentPlayer].textContent =
+          `Score: ${this.scores[this.currentPlayer]}`;
+      }
+
       for (let dr = 0; dr < h; dr++) {
         for (let dc = 0; dc < w; dc++) {
           this.occ[targetBoard][row+dr][col+dc] = true;
         }
       }
-
-      this.scores[this.currentPlayer] += w * h;
-      this.scoreEls[this.currentPlayer].textContent =
-        `Score: ${this.scores[this.currentPlayer]}`;
 
       this.rectSize[this.currentPlayer] = null;
       this.skipCount = 0;
