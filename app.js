@@ -48,11 +48,15 @@
     }
 
     rollDice() {
+      // Generate the two dice values
       const d1 = 1 + Math.floor(Math.random() * 6);
       const d2 = 1 + Math.floor(Math.random() * 6);
       this.rectSize[this.currentPlayer] = [d1, d2];
+
+      // Display result and disable further rolls until turn ends
       this.resultSpan.textContent =
         `Player ${this.currentPlayer+1} rolled ${d1}×${d2}`;
+      this.rollBtn.disabled = true;
     }
 
     hasValidMove(p, [w, h]) {
@@ -127,7 +131,7 @@
       rectEl.appendChild(label);
       boardEl.appendChild(rectEl);
 
-      // only award points if placed on own grid
+      // Only award points if placed on own grid
       if (targetBoard === this.currentPlayer) {
         this.scores[this.currentPlayer] += w * h;
         this.scoreEls[this.currentPlayer].textContent =
@@ -164,6 +168,7 @@
 
     nextTurn() {
       this.currentPlayer = 1 - this.currentPlayer;
+      // Re‑enable rolling for the next player
       this.rollBtn.disabled = false;
       this.resultSpan.textContent = '';
     }
